@@ -58,3 +58,11 @@ The A-ReC agent is structured around the fundamental loop of Agentic AI:
 | **Planning Schema** | **Completed** | Implemented the `Search` and `Finish` actions using `#[serde(tag = "type", ...)]`. |
 | **Reasoning Flow** | **Completed** | Created a mock `reasoning_engine` to simulate LLM logic, demonstrating how an observation (input) dictates a specific structured action (output). |
 
+### ➡️ Day 4: The Execution Layer (Act Phase)
+
+| Concept | Status | Notes |
+| :--- | :--- | :--- |
+| **Execution Interface** | **Completed** | Implemented the `tool_executor` function to dispatch structured `AgentAction`s. |
+| **Mock Tooling** | **Completed** | Created a mock `search_tool` to simulate external API calls using `tokio::time::sleep`. |
+| **O-R-A Integration** | **Completed** | Integrated all three phases (`Observe`, `Reason`, `Act`) into a single cycle, demonstrating how a plan is executed. |
+| **Observation Flow** | **Completed** | Structured the `ToolOutput` as the next Observation, completing the feedback loop for multi-step reasoning. |
