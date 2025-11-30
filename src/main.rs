@@ -15,21 +15,6 @@ struct ResearchItem {
     is_completed: bool,
 }
 
-async fn fetch_and_parse_data(item_id: u32) -> Result<ResearchItem> {
-    println!("-> Task {}: Initiating request.", item_id);
-
-    let url = format!("https://jsonplaceholder.typicode.com/todos/{}", item_id);
-
-    // 1. Make a Get request
-    let response = reqwest::get(&url).await?;
-
-    // 2 use .json()
-    let item = response.json::<ResearchItem>().await?;
-    println!("<- Task {}: Data received and parsed.", item_id);
-
-    Ok(item)
-}
-
 // New agents structures
 // 1. define the possible actions agent can take.
 #[derive(Debug, Serialize, Deserialize)]
@@ -60,6 +45,26 @@ impl AgentAction {
                 .replace("The status is confirmed: '", ""),
         }
     }
+}
+#[derive(Debug)]
+struct ToolOutput {
+    content: String,
+}
+
+// 1. implement observation function
+async fn fetch_and_parse_data(item_id: u32) -> Result<ResearchItem> {
+    println!("-> Task {}: Initiating request.", item_id);
+
+    let url = format!("https://jsonplaceholder.typicode.com/todos/{}", item_id);
+
+    // 1. Make a Get request
+    let response = reqwest::get(&url).await?;
+
+    // 2 use .json()
+    let item = response.json::<ResearchItem>().await?;
+    println!("<- Task {}: Data received and parsed.", item_id);
+
+    Ok(item)
 }
 
 // 2. implement mock reasoning function
@@ -102,41 +107,65 @@ async fn reasoning_engine(observation: ResearchItem) -> Result<ActionPlan> {
     Ok(plan)
 }
 
+// 3. implement the action dispatcher - Execution phase
+async fn search_tool(query: &str) -> ToolOutput {
+    println!("\n🔍 Tool Executing: Searching for: '{}'", query);
+    tokio::time::sleep(Duration::from_secs(1)).await; // Simulate network latency
+
+    let mock_result = format!(
+        "Search Result for '{}': The top result suggests using the 'reqwest::Client' to manage connections and handle futures with 'tokio::join!'. Total 3 relevant snippets found.",
+        query
+    );
+
+    println!("✅ Tool Finished: Received search result.");
+    ToolOutput {
+        content: mock_result,
+    }
+}
+
+async fn tool_executor(plan: ActionPlan) -> Result<Option<ToolOutput>> {
+    match plan.action {
+        AgentAction::Finish { final_answer } => {
+            println!("\n🛑 AGENT HALT: Goal Achieved!");
+            println!("   Final Answer: {}", final_answer);
+            // Return None to signal the main loop to stop
+            Ok(None)
+        }
+        AgentAction::Search { query } => {
+            let tool_output = search_tool(&query).await;
+            // Return the output wrapped in Some() because the cycle should continue
+            Ok(Some(tool_output))
+        }
+    }
+}
+
+//  driver code  - integration of Observer-reason-execute loop
 #[tokio::main]
 async fn main() -> Result<()> {
-    println!("\n🚀 A-ReC Agent Day 3: Reasoning Engine Test...\n");
+    println!("\n🚀 A-ReC Agent Day 4: Full O-R-A Loop (Single Cycle) Test...\n");
 
-    // --- 1. OBSERVE (Fetch two items: one complete (4) and one incomplete (5)) ---
-    let handle_4 = tokio::spawn(fetch_and_parse_data(4));
-    let handle_5 = tokio::spawn(fetch_and_parse_data(5));
+    // -- 1. OBSERVE (fetch incomplete todo item 5) --
+    let initial_observation = tokio::spawn(fetch_and_parse_data(5)).await??;
 
-    let obs_4 = handle_4.await??;
-    let obs_5 = handle_5.await??;
+    // -- 2. RESON/PLAn( Get the action plan) --
+    let plan = tokio::spawn(reasoning_engine(initial_observation)).await??;
 
-    // --- 2. REASON/PLAN (Pass observations to the Decision-maker) ---
-    let plan_handle_4 = tokio::spawn(reasoning_engine(obs_4));
-    let plan_handel_5 = tokio::spawn(reasoning_engine(obs_5));
+    // -- 3. ACT (execute the plan) --
+    // The reasoning engine for item 5 should have returned AgentAction::Search since it is incomplete
+    println!("\n--- STARTING EXECUTION ---");
+    let next_observation = tool_executor(plan).await?;
 
-    let plan_4 = plan_handle_4.await??;
-    let plan_5 = plan_handel_5.await??;
+    // -- 4. PREPARE for the next cycle (Logging the new observeation for now) --
+    if let Some(output) = next_observation {
+        println!("\n----------------------------------------------");
+        println!("✨ Cycle 1 Complete. New Observation Ready for LLM:");
+        println!("{}", output.content);
+        println!("----------------------------------------------");
 
-    // --- 3. EXECUTE (Simulated logging of the planned Action) ---
-
-    println!("\n==============================================");
-    println!("🔬 **A-ReC RESEARCH CYCLE SUMMARY**");
-    println!("==============================================");
-
-    // Summary for Item 4 (Completed)
-    println!("Item ID {}:", plan_4.action.get_id());
-    println!("  Reasoning: {}", plan_4.reasoning);
-    println!("  Action: {:?}", plan_4.action);
-    println!("----------------------------------------------");
-
-    // Summary for Item 5 (Incomplete)
-    println!("Item ID {}:", plan_5.action.get_id());
-    println!("  Reasoning: {}", plan_5.reasoning);
-    println!("  Action: {:?}", plan_5.action);
-    println!("==============================================");
-
+        // In a real agent, you would now pass `output.content`
+        // back to the `reasoning_engine` for the next step.
+    } else {
+        println!("\nAgent finished in the first cycle.");
+    }
     Ok(())
 }
