@@ -34,3 +34,27 @@ The A-ReC agent is structured around the fundamental loop of Agentic AI:
 
 ---
 
+### ➡️ Day 1: Laying the Foundation (Tokio Concurrency)
+
+| Concept | Status | Notes |
+| :--- | :--- | :--- |
+| **Agentic AI Conceptualized** | **Completed** | Defined the Observe-Reason-Act (O-R-A) Loop as the high-level architecture. |
+| **Tokio Setup** | **Completed** | Project initialized with `tokio = { features = ["full"] }` for async runtime support. |
+| **Concurrency** | **Completed** | Used `tokio::spawn` and `JoinHandle` to run multiple I/O-bound tasks concurrently, demonstrating non-blocking behavior with `sleep`. |
+
+### ➡️ Day 2: The Observe Layer (Real I/O and Data Parsing)
+
+| Concept | Status | Notes |
+| :--- | :--- | :--- |
+| **Async HTTP** | **Completed** | Integrated `reqwest` for non-blocking network requests. |
+| **Data Parsing** | **Completed** | Used `serde` (`Deserialize`) to convert JSON API responses into strongly-typed Rust structs (`ResearchItem`). |
+| **Error Handling** | **Completed** | Adopted `anyhow` and the `?` operator for clean, application-level error management across I/O operations. |
+
+### ➡️ Day 3: The Reasoning Engine (LLM Structure and Planning)
+
+| Concept | Status | Notes |
+| :--- | :--- | :--- |
+| **Structured Output** | **Completed** | Defined the `ActionPlan` struct and `AgentAction` enum to force the LLM to output a predictable JSON schema. |
+| **Planning Schema** | **Completed** | Implemented the `Search` and `Finish` actions using `#[serde(tag = "type", ...)]`. |
+| **Reasoning Flow** | **Completed** | Created a mock `reasoning_engine` to simulate LLM logic, demonstrating how an observation (input) dictates a specific structured action (output). |
+
