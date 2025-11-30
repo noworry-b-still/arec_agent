@@ -1,0 +1,21 @@
+# Rust build output
+/target/
+
+# Cargo package manager files
+**/*.rs.bk
+Cargo.lock
+
+# IDE / editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Zed
+.zed/
+
+# Logs
+*.log
+
+# OS-specific
+.DS_Store
