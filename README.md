@@ -66,3 +66,12 @@ The A-ReC agent is structured around the fundamental loop of Agentic AI:
 | **Mock Tooling** | **Completed** | Created a mock `search_tool` to simulate external API calls using `tokio::time::sleep`. |
 | **O-R-A Integration** | **Completed** | Integrated all three phases (`Observe`, `Reason`, `Act`) into a single cycle, demonstrating how a plan is executed. |
 | **Observation Flow** | **Completed** | Structured the `ToolOutput` as the next Observation, completing the feedback loop for multi-step reasoning. |
+
+### ➡️ Day 5: Persistence and Iteration (The Autonomous Loop)
+
+| Concept | Status | Notes |
+| :--- | :--- | :--- |
+| **Agent Memory** | **Completed** | Defined the `AgentContext` and `HistoryEntry` structs to manage the agent's state and conversation history. |
+| **Iterative Loop** | **Completed** | Wrapped the O-R-A flow in a `loop` structure, allowing the agent to perform multi-step, autonomous reasoning. |
+| **Feedback Loop** | **Completed** | The `ToolOutput` from the **Act** phase is now passed as the Observation input to the **Reason** phase of the next cycle. |
+| **Loop Termination**| **Completed** | The loop correctly terminates when the `AgentAction::Finish` is returned by the Reasoning Engine. |

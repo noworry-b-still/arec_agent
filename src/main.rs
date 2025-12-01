@@ -51,6 +51,20 @@ struct ToolOutput {
     content: String,
 }
 
+// -- New Agent Memory Structure --
+// Represents an entry in the agent's history (a completed step I mean)
+#[derive(Debug, Clone)]
+struct HistoryEntry {
+    action: String,
+    observation: String,
+}
+
+#[derive(Debug)]
+struct AgentContext {
+    goal: String,
+    history: Vec<HistoryEntry>,
+}
+
 // 1. implement observation function
 async fn fetch_and_parse_data(item_id: u32) -> Result<ResearchItem> {
     println!("-> Task {}: Initiating request.", item_id);
@@ -68,42 +82,46 @@ async fn fetch_and_parse_data(item_id: u32) -> Result<ResearchItem> {
 }
 
 // 2. implement mock reasoning function
-async fn reasoning_engine(observation: ResearchItem) -> Result<ActionPlan> {
+// to accept context, observation
+async fn reasoning_engine(context: &AgentContext, observation: ToolOutput) -> Result<ActionPlan> {
     println!("\n🧠 Reasoning Engine: Analyzing observation...");
-    sleep(Duration::from_millis(500)).await; // simulate API latency
 
-    let plan = if observation.is_completed {
+    // 1.  Simulate using the full history and new observation to make a decision
+    let context_summary = format!(
+        "Goal: {}. History has {} steps. New Observation: {}",
+        context.goal,
+        context.history.len(),
+        observation.content
+    );
+
+    // 2. Simulate complex decision logic based on the observation content
+    let plan = if observation.content.contains("The final answer is 42") {
+        // Condition1: tool has found the key peice of info
         ActionPlan {
-            reasoning: format!(
-                "The research item ID {} has the title '{}' and is marked completed. No further action needed.",
-                observation.id, observation.title
-            ),
+            reasoning: "The previous search has yielded the final, authoritative answer. I can now conclude the research.".to_string(),
             action: AgentAction::Finish {
-                final_answer: format!(
-                    "The status is confimed: '{}' is complete",
-                    observation.title
-                ),
+            final_answer: "The meaning of life, according to the research, is 42.".to_string(),
             },
         }
     } else {
+        let new_query = if context.history.is_empty() {
+            "initial research query".to_string()
+        } else {
+            "deeper dive into the number 42's context".to_string()
+        };
+
         ActionPlan {
             reasoning: format!(
-                "The research item ID {} is incomplete. I need to search for more information on the topic: '{}'.",
-                observation.id, observation.title
+                "Initial search provided a general result. I need to run a new targeted search: {}",
+                new_query
             ),
-            action: AgentAction::Search {
-                query: format!("How to complete task: {}", observation.title),
-            },
+            action: AgentAction::Search { query: new_query },
         }
     };
 
-    println!(
-        "-> Plan Generated. Action Type: {}",
-        match &plan.action {
-            AgentAction::Search { .. } => "Search",
-            AgentAction::Finish { .. } => "Finish",
-        }
-    );
+    // 3. (Real LLM step): Simulate API latency
+    tokio::time::sleep(Duration::from_millis(500)).await;
+
     Ok(plan)
 }
 
@@ -112,10 +130,16 @@ async fn search_tool(query: &str) -> ToolOutput {
     println!("\n🔍 Tool Executing: Searching for: '{}'", query);
     tokio::time::sleep(Duration::from_secs(1)).await; // Simulate network latency
 
-    let mock_result = format!(
-        "Search Result for '{}': The top result suggests using the 'reqwest::Client' to manage connections and handle futures with 'tokio::join!'. Total 3 relevant snippets found.",
-        query
-    );
+    let mock_result = if query.contains("deeper dive") {
+        // Second search yields the final answer
+        "Search Result: Deep analysis complete. The final answer is 42. No further research is required.".to_string()
+    } else {
+        // Initial search yields a hint
+        format!(
+            "Search Result for '{}': The general finding points toward a key number. I must refine the search.",
+            query
+        )
+    };
 
     println!("✅ Tool Finished: Received search result.");
     ToolOutput {
@@ -142,30 +166,62 @@ async fn tool_executor(plan: ActionPlan) -> Result<Option<ToolOutput>> {
 //  driver code  - integration of Observer-reason-execute loop
 #[tokio::main]
 async fn main() -> Result<()> {
-    println!("\n🚀 A-ReC Agent Day 4: Full O-R-A Loop (Single Cycle) Test...\n");
+    println!("\n🚀 A-ReC Agent Day 5: Full Autonomous O-R-A Loop...\n");
 
-    // -- 1. OBSERVE (fetch incomplete todo item 5) --
-    let initial_observation = tokio::spawn(fetch_and_parse_data(5)).await??;
+    // users intial prompt is 1st observation.
+    let initial_goal = "Determin the try meaning of life and the universe.";
+    let mut current_observation = ToolOutput {
+        content: format!("The user wants to: {}", initial_goal),
+    };
 
-    // -- 2. RESON/PLAn( Get the action plan) --
-    let plan = tokio::spawn(reasoning_engine(initial_observation)).await??;
+    // agent context
+    let mut context = AgentContext {
+        goal: initial_goal.to_string(),
+        history: Vec::new(),
+    };
 
-    // -- 3. ACT (execute the plan) --
-    // The reasoning engine for item 5 should have returned AgentAction::Search since it is incomplete
-    println!("\n--- STARTING EXECUTION ---");
-    let next_observation = tool_executor(plan).await?;
+    let mut cycle_count = 0;
+    loop {
+        cycle_count += 1;
+        println!("\n==============================================");
+        println!(
+            "  CYCLE {} - Agent has {} history steps.",
+            cycle_count,
+            context.history.len()
+        );
+        println!("==============================================");
 
-    // -- 4. PREPARE for the next cycle (Logging the new observeation for now) --
-    if let Some(output) = next_observation {
-        println!("\n----------------------------------------------");
-        println!("✨ Cycle 1 Complete. New Observation Ready for LLM:");
-        println!("{}", output.content);
-        println!("----------------------------------------------");
+        // --- 1. REASON/PLAN (The Reasoning Engine decides the next action) ---
+        let plan = reasoning_engine(&context, current_observation).await?;
 
-        // In a real agent, you would now pass `output.content`
-        // back to the `reasoning_engine` for the next step.
-    } else {
-        println!("\nAgent finished in the first cycle.");
+        // --- 2. ACT (Execute the plan) ---
+        let action_str = format!("{:?}", plan.action);
+        let execution_result = tool_executor(plan).await?;
+
+        // --- 3. OBSERVE (Process the execution result for the next cycle) ---
+        match execution_result {
+            // Case 1: The agent executed a tool (e.g., Search). The cycle continues.
+            Some(next_tool_output) => {
+                // Record the completed step in the agent's memory
+                context.history.push(HistoryEntry {
+                    action: action_str,
+                    observation: next_tool_output.content.clone(),
+                });
+
+                // Set the output as the observation for the next loop iteration
+                current_observation = next_tool_output;
+            }
+            // Case 2: The agent returned the Finish action. The loop must break.
+            None => {
+                break;
+            }
+        }
     }
+
+    println!(
+        "\n✅ Autonomous Research Complete in {} cycles.",
+        cycle_count
+    );
+    println!("Agent finished.");
     Ok(())
 }
