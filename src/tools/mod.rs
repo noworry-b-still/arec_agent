@@ -1,5 +1,5 @@
 pub mod executor;
 pub mod research;
-pub mod scrapper;
+pub mod scraper;
 
-pub use scrapper::ToolOutput;
+pub use scraper::ToolOutput;

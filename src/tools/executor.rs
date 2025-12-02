@@ -1,20 +1,28 @@
-use crate::agent::planner::{ActionPlan, AgentAction};
-use crate::tools::research::search_tool;
-use crate::tools::scrapper::ToolOutput;
+use super::research::search_tool;
+use super::scraper::{ToolOutput, scrape_tool};
+use crate::agent::planner::ActionPlan;
+use crate::agent::planner::AgentAction;
 use anyhow::Result;
 
+// The Execution Engine/Dispatcher
 pub async fn tool_executor(plan: ActionPlan) -> Result<Option<ToolOutput>> {
     match plan.action {
+        AgentAction::Search { query } => {
+            let tool_output = search_tool(&query).await;
+            Ok(Some(tool_output))
+        }
+
+        // NEW MATCH ARM
+        AgentAction::Scrape { url } => {
+            // Call the actual scraping tool
+            let tool_output = scrape_tool(&url).await?;
+            Ok(Some(tool_output))
+        }
+
         AgentAction::Finish { final_answer } => {
             println!("\n🛑 AGENT HALT: Goal Achieved!");
             println!("   Final Answer: {}", final_answer);
-            // Return None to signal the main loop to stop
             Ok(None)
-        }
-        AgentAction::Search { query } => {
-            let tool_output = search_tool(&query).await;
-            // Return the output wrapped in Some() because the cycle should continue
-            Ok(Some(tool_output))
         }
     }
 }

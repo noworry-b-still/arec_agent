@@ -1,23 +1,21 @@
-use crate::tools::ToolOutput;
-use tokio::time::Duration;
+use super::scraper::ToolOutput; // Import ToolOutput from the same module group
+use std::time::Duration;
+use tokio::time::sleep;
 
-// 3. implement the action dispatcher - Execution phase
+// Mock tool: Simulates a search API call that returns a URL.
 pub async fn search_tool(query: &str) -> ToolOutput {
     println!("\n🔍 Tool Executing: Searching for: '{}'", query);
-    tokio::time::sleep(Duration::from_secs(1)).await; // Simulate network latency
+    sleep(Duration::from_millis(500)).await;
 
-    let mock_result = if query.contains("deeper dive") {
-        // Second search yields the final answer
-        "Search Result: Deep analysis complete. The final answer is 42. No further research is required.".to_string()
-    } else {
-        // Initial search yields a hint
-        format!(
-            "Search Result for '{}': The general finding points toward a key number. I must refine the search.",
-            query
-        )
-    };
+    // We use the URL of the first website ever (info.cern.ch) for a reliable test.
+    let mock_url = "https://www.scrapethissite.com/pages/";
 
-    println!("✅ Tool Finished: Received search result.");
+    let mock_result = format!(
+        "Search Result for '{}': Top article found. Found URL: {}",
+        query, mock_url
+    );
+
+    println!("✅ Tool Finished: Found relevant URL.");
     ToolOutput {
         content: mock_result,
     }

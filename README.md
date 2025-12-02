@@ -75,3 +75,12 @@ The A-ReC agent is structured around the fundamental loop of Agentic AI:
 | **Iterative Loop** | **Completed** | Wrapped the O-R-A flow in a `loop` structure, allowing the agent to perform multi-step, autonomous reasoning. |
 | **Feedback Loop** | **Completed** | The `ToolOutput` from the **Act** phase is now passed as the Observation input to the **Reason** phase of the next cycle. |
 | **Loop Termination**| **Completed** | The loop correctly terminates when the `AgentAction::Finish` is returned by the Reasoning Engine. |
+
+### ➡️ Day 6: Advanced Tooling & Modularity (Web Scraping)
+
+| Concept | Status | Notes |
+| :--- | :--- | :--- |
+| **Project Modularity** | **Completed** | Refactored the monolithic `main.rs` into dedicated `agent/` (brain) and `tools/` (hands) modules for clean structure. |
+| **Real Tool Integration** | **Completed** | Added `scraper` and `url` crates to enable real HTML parsing and low-level web interaction. |
+| **Scraping Functionality** | **Completed** | Implemented a production-like `scrape_tool` using `reqwest` + CSS selectors to extract readable text from HTML pages. |
+| **Multi-Step Planning** | **Completed** | Agent now performs a multi-hop chain: **Search → Scrape → Reason**, enabling richer planning and real web data use. |
