@@ -84,3 +84,12 @@ The A-ReC agent is structured around the fundamental loop of Agentic AI:
 | **Real Tool Integration** | **Completed** | Added `scraper` and `url` crates to enable real HTML parsing and low-level web interaction. |
 | **Scraping Functionality** | **Completed** | Implemented a production-like `scrape_tool` using `reqwest` + CSS selectors to extract readable text from HTML pages. |
 | **Multi-Step Planning** | **Completed** | Agent now performs a multi-hop chain: **Search → Scrape → Reason**, enabling richer planning and real web data use. |
+
+### ➡️ Day 7: The Perception Layer (Real Search + Config)
+
+| Concept | Status | Notes |
+| :--- | :--- | :--- |
+| **Configuration** | **Completed** | Introduced the `dotenvy` crate and a `config.rs` module to safely manage API keys and settings using environment variables. |
+| **Stateful Client** | **Completed** | Implemented a `SearchClient` struct to hold and reuse a single `reqwest::Client` instance for optimized, persistent I/O. |
+| **Real Search Structure** | **Completed** | Replaced the mock `search_tool` with a real implementation capable of parsing complex JSON API responses (`SearchResponse`) into Rust structs. |
+| **Perception Layer Complete** | **Milestone** | The agent's **Observe** layer is fully functional — both Search and Scrape now work with live external data. |

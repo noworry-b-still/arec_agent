@@ -14,12 +14,14 @@ use agent::planner::AgentAction;
 use agent::planner::reasoning_engine; // To format the action string
 
 // Imports from Tools (The Observation Structure and Execution Dispatcher)
+use dotenvy::dotenv;
 use tools::ToolOutput;
 use tools::executor::tool_executor;
 
 #[tokio::main]
 async fn main() -> Result<()> {
     println!("\n🚀 A-ReC Agent Day 6: Modular Autonomous Loop Running...\n");
+    dotenv().ok();
 
     // --- 1. INITIALIZE AGENT CONTEXT (Memory) ---
     let initial_goal =

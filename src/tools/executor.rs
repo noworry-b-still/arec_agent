@@ -8,7 +8,7 @@ use anyhow::Result;
 pub async fn tool_executor(plan: ActionPlan) -> Result<Option<ToolOutput>> {
     match plan.action {
         AgentAction::Search { query } => {
-            let tool_output = search_tool(&query).await;
+            let tool_output = search_tool(&query).await?;
             Ok(Some(tool_output))
         }
 
