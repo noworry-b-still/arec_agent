@@ -64,12 +64,19 @@ async fn main() -> Result<()> {
         let action_str = format!("{:?}", plan.action);
         println!("📝 Planned Action: {:?}", plan.action);
 
-        let execution_result = tool_executor(plan).await?;
+        let execution_result = tool_executor(plan).await;
 
         // --- OBSERVE (Process the execution result for the next cycle) ---
         match execution_result {
-            // Case 1: The agent executed a tool (e.g., Search or Scrape). The cycle continues.
+            // execution_result is now Option<ToolOutput>
             Some(next_tool_output) => {
+                // Check for the error trigger before saving to history
+                if next_tool_output.content.starts_with("TOOL_ERROR:") {
+                    eprintln!(
+                        "\n🚨 TOOL FAILURE DETECTED! Sending error to Reasoning Engine for Reflection."
+                    );
+                }
+
                 // Record the completed step in the agent's memory
                 context.history.push(HistoryEntry {
                     action: action_str,

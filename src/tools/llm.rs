@@ -108,8 +108,17 @@ pub async fn call_llm_for_plan(
     // --- MOCK API CALL START (Replace with real client.post().send().await? later) ---
     // Simulate the API returning a perfect JSON plan based on the observation:
     let inner_content: String;
-
-    if observation.content.contains("self-governing") {
+    if observation.content.contains("TOOL_ERROR:") {
+        let error_message = observation
+            .content
+            .split(":")
+            .nth(1)
+            .unwrap_or("Unknown error");
+        inner_content = format!(
+            r#"{{"reasoning":"The previous action resulted in a TOOL_ERROR: {}. I must reflect on this failure. Since the API key failed, I will try a broader, unkeyed search query to bypass the block, or suggest a human intervention.","action":{{"type":"Search","arguments":{{"query":"Alternative research query after failed API"}} }}}}"#,
+            error_message.trim()
+        );
+    } else if observation.content.contains("self-governing") {
         // Success case (The scraped content has the definition)
         inner_content = r#"{"reasoning":"The scrape successfully retrieved the definition of autonomy, explicitly mentioning 'self-governing'. The research goal is now complete.","action":{"type":"Finish","arguments":{"final_answer":"Autonomy is defined as the capacity for informed, uncoerced decision-making, and often refers to institutions that are self-governing."}}}"#.to_string();
     } else if observation.content.contains("Found URL") {

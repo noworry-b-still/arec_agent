@@ -7,6 +7,10 @@ use serde::Deserialize;
 use serde_json;
 use tokio::time::{Duration, sleep}; // Needed for deserializing the mock JSON
 
+// Add a mutable counter (or rely on the query string for testing reflection)
+use std::sync::atomic::{AtomicUsize, Ordering};
+static CALL_COUNT: AtomicUsize = AtomicUsize::new(0);
+
 // --- New Structures for Search API JSON ---
 
 // 1. Represents a single search result item
@@ -26,6 +30,18 @@ struct SearchResponse {
 // The REAL Search Tool Implementation
 pub async fn search_tool(query: &str) -> Result<ToolOutput> {
     println!("\n🔍 Tool Executing: Real Search for: '{}'", query);
+
+    let count = CALL_COUNT.fetch_add(1, Ordering::SeqCst) + 1;
+
+    // --- MOCK FAILURE SCENARIO ---
+    if count >= 1 {
+        println!("🚨 MOCK FAILURE: Simulating API Key expiration or quota limit.");
+        // Return a structured error using anyhow
+        return Err(anyhow::anyhow!(
+            "API Key invalid or quota exceeded on call {}",
+            count
+        ));
+    }
 
     // 1. Load the client and configuration
     let search_client = SearchClient::new()?;

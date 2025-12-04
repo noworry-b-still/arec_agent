@@ -1,0 +1,4 @@
+Add Error Handling + reflection based on errors
+Task1: Refactor ToolOutput adn Executor (Diff the successful tool ouput and error tool output)
+Task2: Implement the Failure scenario and mock error
+Task3: Update necessary modules and test it
