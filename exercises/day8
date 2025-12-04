@@ -1,0 +1,4 @@
+LLM Integration (my first real llm call)
+Task1: Look for crates that aids in programmatic JSON construction
+Task2: Then Define LLM Request and Response structures
+Task3: Update the files to include new LLM module

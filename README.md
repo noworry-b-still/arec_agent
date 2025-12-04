@@ -93,3 +93,12 @@ The A-ReC agent is structured around the fundamental loop of Agentic AI:
 | **Stateful Client** | **Completed** | Implemented a `SearchClient` struct to hold and reuse a single `reqwest::Client` instance for optimized, persistent I/O. |
 | **Real Search Structure** | **Completed** | Replaced the mock `search_tool` with a real implementation capable of parsing complex JSON API responses (`SearchResponse`) into Rust structs. |
 | **Perception Layer Complete** | **Milestone** | The agent's **Observe** layer is fully functional — both Search and Scrape now work with live external data. |
+
+### ➡️ Day 8: LLM Integration (First Real LLM Call)
+
+| Concept | Status | Notes |
+| :--- | :--- | :--- |
+| **LLM Configuration** | **Completed** | Added `LLMClient` to `config.rs` and updated `.env` to manage LLM API keys and model choice. |
+| **Prompt Engineering** | **Completed** | Designed the Prompt Template to include the **System Prompt**, **History**, and **Current Observation**, providing the LLM with full context. |
+| **Structured Output** | **Completed** | Defined `LLMRequest` and `LLMResponse` structures and implemented logic to enforce **structured JSON output**, ensuring the LLM's response maps directly to `ActionPlan`. |
+| **Reasoning Engine Functional** | **Milestone** | The mock logic has been replaced with a fully structured and callable LLM service wrapper, completing the core cognitive component. |
